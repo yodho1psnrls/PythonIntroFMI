@@ -16,9 +16,9 @@ def reduce(num: int, *specials) -> int:
     return num
 
 
+'''
 def personal_year(date: str) -> int:
     day, month, year = date.split(".")
-    # int = date.replace('.', "")
     day, month, year = int(day), int(month), int(year)
     result = 0
 
@@ -27,6 +27,13 @@ def personal_year(date: str) -> int:
     result += sum(digits(year))
 
     return reduce(result, 11)
+'''
+
+
+# Shorter Implementation
+def personal_year(date: str) -> int:
+    whole_num = int(date.replace('.', ""))
+    return reduce(sum(digits(whole_num)), 11)
 
 
 if __name__ == "__main__":
