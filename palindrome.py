@@ -23,6 +23,7 @@ def is_palindrome(word: str) -> bool:
     for i in range(n // 2):
         if word[i] != word[n - i - 1]:
             return False
+
     return True
 
 
@@ -31,7 +32,6 @@ if __name__ == "__main__":
 
     while True:
         word = str(input())
-        # print(is_palindrome(word))
         print(is_palindrome(word))
 
 
