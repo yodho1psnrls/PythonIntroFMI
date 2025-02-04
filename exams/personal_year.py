@@ -1,6 +1,7 @@
 # Given an integer number it returns its digits
 def digits(num: int) -> list[int]:
     result = []
+    num = abs(num)
     while num >= 10:
         result.append(num % 10)
         num //= 10
@@ -15,8 +16,9 @@ def reduce(num: int, *specials) -> int:
     return num
 
 
-def personal_year(year: str) -> int:
-    day, month, year = year.split(".")
+def personal_year(date: str) -> int:
+    day, month, year = date.split(".")
+    # int = date.replace('.', "")
     day, month, year = int(day), int(month), int(year)
     result = 0
 
@@ -28,9 +30,12 @@ def personal_year(year: str) -> int:
 
 
 if __name__ == "__main__":
-    year = input()
-    print(personal_year(year))
     # print(personal_year("09.09.1991")) # 11
+
+    while (True):
+        date = input("date: ")
+        print(f'personal: {personal_year(date)}')
+        print("----------------")
 
 
 #
