@@ -1,3 +1,8 @@
+# NOTE:
+# You can convert int to string and
+#  then use python map function to map the
+#  string of digits to list of digits
+
 # Given an integer number it returns its digits
 def digits(num: int) -> list[int]:
     result = []
@@ -42,7 +47,7 @@ if __name__ == "__main__":
     while (True):
         date = input("date: ")
         print(f'personal: {personal_year(date)}')
-        print("----------------")
+        print("-" * len(date))
 
 
 #
