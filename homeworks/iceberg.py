@@ -28,7 +28,7 @@ def will_ice_melt(iceberg: list[list[str]], x, y, ice="*"):
     return n >= 2
 
 
-def melted(icebert: list[str], ice="*"):
+def melted(iceberg: list[str], ice="*"):
     temp = [list(row) for row in iceberg]
 
     for x in range(len(iceberg)):
@@ -44,20 +44,25 @@ ICE = "*"
 
 if __name__ == "__main__":
 
-    N = int(input())
-    iceberg = []
+    # Read from console
+    # N = int(input())
+    # iceberg = [str(input()) for _ in range(N)]
+    # print(N * "=")
 
-    for i in range(N):
-        iceberg.append(str(input()))
-
-    print(N * "=")
+    # Read from file
+    file = open("iceberg1.txt", "r")
+    line = file.readline().strip()
+    N = int(line)
+    iceberg = [str(line.strip()) for line in file]
 
     hours = 0
     while not is_ice_empty(iceberg):
+        for row in iceberg:
+            print(row)
+        print(N * "=")
         iceberg = melted(iceberg)
         hours += 1
 
     print(hours)
-
-
+    file.close()
 #
