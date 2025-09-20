@@ -1,3 +1,4 @@
+from model.mesh_factory import MeshFactory
 import numpy as np
 from model.mesh import Mesh
 # import parametric as par
@@ -28,7 +29,7 @@ def quad_ids(rows: int, cols: int) -> list[list[int]]:
 
 # Factory class that converts and
 # Equation to a 3D mesh
-class Generator:
+class Factory(MeshFactory):
     # def reset(self, rows: int, cols=None):
     #     cols = cols if cols else rows
     #     self._quads = np.array(quad_grid(rows, cols))
@@ -42,7 +43,14 @@ class Generator:
     #     self.rows = rows
     #     self.cols = cols
 
-    def get_mesh(self, eq: par.Equation) -> Mesh:
-        points = [eq.calc(uv) for uv in normal_uvs(self.rows, self.cols)]
+    # def get_mesh(self, eq: par.Equation) -> Mesh:
+    #     points = [eq.calc(uv) for uv in normal_uvs(self.rows, self.cols)]
+    #     quads = quad_ids(self.rows, self.cols)
+    #     return Mesh(points, quads)
+
+    def get_mesh(self, eq) -> Mesh:
+        if not callable(eq):
+            raise RuntimeError("the given equation function should be callable")
+        points = [eq(uv) for uv in normal_uvs(self.rows, self.cols)]
         quads = quad_ids(self.rows, self.cols)
         return Mesh(points, quads)

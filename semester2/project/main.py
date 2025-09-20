@@ -11,15 +11,16 @@ if __name__ == '__main__':
     # mesh = Mesh(points, grid)
     # for p in mesh.points:
     #     print(p)
-    # for quad in mesh.indices:
+    # for quad in mesh.faces:
     #     print(quad)
     # print(type(mesh.points[0]))
 
-    gen = par.Generator(16, 16)
-    # eq = par.Shere(1.0)
-    eq = par.Cone()
+    gen = par.Factory(16, 16)
+    # eq = par.Cone()
+    eq = par.cone
     mesh = gen.get_mesh(eq)
 
     print(f"points: {len(mesh.points)}")
-    print(f"quads: {len(mesh.indices)}")
+    print(f"quads: {len(mesh.faces)}")
+    # print(issubclass(par.Generator, par.MeshFactory))
     pl.draw(mesh)

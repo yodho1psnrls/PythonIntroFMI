@@ -12,4 +12,4 @@ class Mesh(PointCloud):
     ):
         super().__init__(points)
         # self.indices = list[list[int]](indices)
-        self.indices = list(indices)
+        self.faces = list(indices)
