@@ -4,10 +4,7 @@ from math import sin
 from math import cos
 from math import exp
 from math import pi
-from sys import float_info
-
-# very small positive number
-eps = float_info.epsilon
+from model.util import eps
 
 
 # Derivative of a parametric equation with respect to u
@@ -32,7 +29,7 @@ def bitangent(uv: glm.vec2, eq) -> glm.vec3:
 
 # The cross product of the dirivatives of the parametric
 #  equation with respect to u and v (points outwards from the surface)
-def derivative(uv: glm.vec2, eq) -> glm.vec3:
+def gradient(uv: glm.vec2, eq) -> glm.vec3:
     return glm.cross(tangent(uv, eq), bitangent(uv, eq))
 
 

@@ -2,38 +2,24 @@ from model.mesh_factory import MeshFactory
 # import numpy as np
 import glm
 from model.mesh import Mesh
+from model.point_cloud import Vertex
 # import parametric as par
 from model import par
 
-
-# uv coordinates from 0 to 1
-def normal_uvs(rows: int, cols: int):
-    for i in range(rows+1):
-        for j in range(cols+1):
-            yield glm.vec2(
-                float(i / rows),
-                float(j / cols),
-            )
-
-
-# generates a quad grid of rows by columns
-def quad_ids(rows: int, cols: int):
-    for i in range(rows):
-        for j in range(cols):
-            yield [
-                i*(cols+1) + j,
-                i*(cols+1) + (j+1),
-                (i+1)*(cols+1) + (j+1),
-                (i+1)*(cols+1) + j,
-            ]
+# TODO: Make the grid with 3d uvs that if different than 0
+# will be used with the gradient as bump map
 
 
 # Factory class that converts and
 # Equation to a 3D mesh
 class Factory(MeshFactory):
-    def __init__(self, rows: int, cols=None):
-        self.rows = rows
-        self.cols = cols
+    def __init__(self, rows: int, cols: int):
+        self.grid = par.QuadGrid(glm.ivec2(rows, cols))
+        # points = [
+        #     Vertex(glm.vec3(uv.x, uv.y, 0), glm.vec3(0, 0, 1), uv)
+        #     for uv in self.grid.points()
+        # ],
+        # self.mesh = Mesh(points, self.grid.faces())
 
     # def set_dim(self, rows, cols):
     #     self.rows = rows
@@ -47,6 +33,11 @@ class Factory(MeshFactory):
     def get_mesh(self, eq) -> Mesh:
         if not callable(eq):
             raise RuntimeError("the given equation function should be callable")
-        points = [eq(uv) for uv in normal_uvs(self.rows, self.cols)]
-        quads = quad_ids(self.rows, self.cols)
-        return Mesh(points, quads)
+        mesh = Mesh(self.grid.points, self.grid.faces)
+        for p in mesh.points:
+            p.norm = glm.normalize(par.gradient(p.uv, eq))
+            p.pos = eq(p.uv)
+        # points = [eq(uv) for uv in self.grid.points()]
+        # faces = self.grid.faces()
+        # return Mesh(points, faces)
+        return mesh

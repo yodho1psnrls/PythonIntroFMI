@@ -5,17 +5,15 @@ from math import sin
 from math import cos
 from math import exp
 from math import pi
-from sys import float_info
-
-# very small positive number
-eps = float_info.epsilon
+from model.util import eps
+# from model.util import AXIS
 
 
 # This gives a 3d vector with the derivatives of the sdf
-def derivative(p: glm.vec3, eq) -> glm.vec3:
-    ex = glm.vec3(eps, 0.0, 0.0)
-    ey = glm.vec3(0.0, eps, 0.0)
-    ez = glm.vec3(0.0, 0.0, eps)
+def gradient(p: glm.vec3, eq, h=eps) -> glm.vec3:
+    ex = glm.vec3(h, 0.0, 0.0)
+    ey = glm.vec3(0.0, h, 0.0)
+    ez = glm.vec3(0.0, 0.0, h)
     # Forward differentiation (Faster, and precise enough with small eps)
     # p_val = eq(p)
     # return glm.vec3(
@@ -46,16 +44,20 @@ def derivative(p: glm.vec3, eq) -> glm.vec3:
 # The simplest SDF is of a sphere, it essentially
 #  gives you the distance from the given point p
 #  to the center of the sphere, minus its radius
-def sphere(p: glm.vec3) -> float:
-    return sqrt(p.x*p.x+p.y*p.y+p.z*p.z) - 1.0
-    # return glm.length(p) - 1.0
+class Sphere:
+    def __init__(self, radius=1.0):
+        self.r = radius
+
+    def __call__(self, p: glm.vec3) -> float:
+        return sqrt(p.x*p.x+p.y*p.y+p.z*p.z) - self.r
+    # return glm.length(p) - self.r
 
 
 # Torus | Donut Shape
 class Torus:
-    def __init__(self, minor_radius: float, major_radius: float):
-        self.r0 = minor_radius
-        self.r1 = major_radius
+    def __init__(self, major_radius: float, minor_radius: float):
+        self.r0 = major_radius
+        self.r1 = minor_radius
 
     def __call__(self, p: glm.vec3) -> float:
         q = glm.vec2(glm.length(p.xz) - self.r0, p.y)
