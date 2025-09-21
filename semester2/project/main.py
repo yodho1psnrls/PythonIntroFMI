@@ -55,6 +55,7 @@ if __name__ == '__main__':
     print(f"points: {len(mesh.points)}")
     print(f"quads: {len(mesh.faces)}")
     # print(issubclass(par.Generator, par.MeshFactory))
+    mesh.save("blqblq.obj")
     pl.draw_mesh(mesh)
     # pl.draw_points(PointCloud(mesh.points))
 

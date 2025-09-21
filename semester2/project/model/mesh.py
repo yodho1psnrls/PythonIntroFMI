@@ -62,3 +62,18 @@ class Mesh(PointCloud):
     #  condensed in the same position
     def collapse_points(self):
         pass
+
+    def save(self, file_path: str):
+        # if file_path[-4:] != '.obj':
+        #     file_path += '.obj'
+        with open(file_path, "w") as f:
+            for p in self.points:
+                f.write(f"v {p.pos.x} {p.pos.y} {p.pos.z}\n")
+            for p in self.points:
+                f.write(f"vt {p.uv.x} {p.uv.y}\n")
+            for p in self.points:
+                f.write(f"vn {p.norm.x} {p.norm.y} {p.norm.z}\n")
+            for face in self.faces:
+                # ids = [i + 1 for i in face]
+                ids = [f"{i+1}/{i+1}/{i+1}" for i in face]
+                f.write("f " + " ".join(ids) + "\n")
