@@ -4,6 +4,36 @@ from math import sin
 from math import cos
 from math import exp
 from math import pi
+from sys import float_info
+
+# very small positive number
+eps = float_info.epsilon
+
+
+# Derivative of a parametric equation with respect to u
+def tangent(uv: glm.vec2, eq) -> glm.vec3:
+    # Forward differentiation (Precise enough with small eps):
+    # return (eq(uv + glm.vec2(eps, 0.0)) - eq(uv)) / eps
+    # Central differentiation (More accurate):
+    a = uv + glm.vec2(eps, 0.0)
+    b = uv - glm.vec2(eps, 0.0)
+    return (eq(a) - eq(b)) / (2.0*eps)
+
+
+# Derivative of a parametric equation with respect to v
+def bitangent(uv: glm.vec2, eq) -> glm.vec3:
+    # Forward differentiation (Precise enough with small eps):
+    # return (eq(uv + glm.vec2(0.0, eps)) - eq(uv)) / eps
+    # Central differentiation (More accurate):
+    a = uv + glm.vec2(0.0, eps)
+    b = uv - glm.vec2(0.0, eps)
+    return (eq(a) - eq(b)) / (2.0*eps)
+
+
+# The cross product of the dirivatives of the parametric
+#  equation with respect to u and v (points outwards from the surface)
+def derivative(uv: glm.vec2, eq) -> glm.vec3:
+    return glm.cross(tangent(uv, eq), bitangent(uv, eq))
 
 
 def sphere(uv: glm.vec2):
