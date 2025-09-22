@@ -63,12 +63,13 @@ class Mesh(PointCloud):
     def collapse_points(self):
         pass
 
+    # https://en.wikipedia.org/wiki/Wavefront_.obj_file
     def save(self, file_path: str):
-        # if file_path[-4:] != '.obj':
-        #     file_path += '.obj'
+        if file_path[-4:] != '.obj':
+            file_path += '.obj'
         with open(file_path, "w") as f:
             for p in self.points:
-                f.write(f"v {p.pos.x} {p.pos.y} {p.pos.z}\n")
+                f.write(f"v  {p.pos.x} {p.pos.y} {p.pos.z}\n")
             for p in self.points:
                 f.write(f"vt {p.uv.x} {p.uv.y}\n")
             for p in self.points:

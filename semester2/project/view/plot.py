@@ -43,3 +43,15 @@ class ViewSystem:
         )
         self.ax.add_collection3d(m)
         plt.show()
+
+    def draw_normals(self, pc: PointCloud):
+        pxs = [p.pos.x for p in pc.points]
+        pys = [p.pos.y for p in pc.points]
+        pzs = [p.pos.z for p in pc.points]
+        nxs = [p.norm.x for p in pc.points]
+        nys = [p.norm.y for p in pc.points]
+        nzs = [p.norm.z for p in pc.points]
+        self.ax.quiver(pxs, pys, pzs, nxs, nys, nzs,
+                       length=0.15, color='green', normalize=False)
+
+        plt.show()

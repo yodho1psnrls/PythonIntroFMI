@@ -8,29 +8,29 @@ from model.util import eps
 
 
 # Derivative of a parametric equation with respect to u
-def tangent(uv: glm.vec2, eq) -> glm.vec3:
+def tangent(uv: glm.vec2, eq, h=eps) -> glm.vec3:
     # Forward differentiation (Precise enough with small eps):
     # return (eq(uv + glm.vec2(eps, 0.0)) - eq(uv)) / eps
     # Central differentiation (More accurate):
-    a = uv + glm.vec2(eps, 0.0)
-    b = uv - glm.vec2(eps, 0.0)
-    return (eq(a) - eq(b)) / (2.0*eps)
+    a = uv + glm.vec2(h, 0.0)
+    b = uv - glm.vec2(h, 0.0)
+    return (eq(a) - eq(b)) / (2.0*h)
 
 
 # Derivative of a parametric equation with respect to v
-def bitangent(uv: glm.vec2, eq) -> glm.vec3:
+def bitangent(uv: glm.vec2, eq, h=eps) -> glm.vec3:
     # Forward differentiation (Precise enough with small eps):
     # return (eq(uv + glm.vec2(0.0, eps)) - eq(uv)) / eps
     # Central differentiation (More accurate):
-    a = uv + glm.vec2(0.0, eps)
-    b = uv - glm.vec2(0.0, eps)
-    return (eq(a) - eq(b)) / (2.0*eps)
+    a = uv + glm.vec2(0.0, h)
+    b = uv - glm.vec2(0.0, h)
+    return (eq(a) - eq(b)) / (2.0*h)
 
 
 # The cross product of the dirivatives of the parametric
 #  equation with respect to u and v (points outwards from the surface)
-def gradient(uv: glm.vec2, eq) -> glm.vec3:
-    return glm.cross(tangent(uv, eq), bitangent(uv, eq))
+def gradient(uv: glm.vec2, eq, h=eps) -> glm.vec3:
+    return glm.cross(tangent(uv, eq, h), bitangent(uv, eq, h))
 
 
 def sphere(uv: glm.vec2):
@@ -49,7 +49,7 @@ def cone(uv: glm.vec2):
     return glm.vec3([
         (1.0 - v) * cos(u),
         (1.0 - v) * sin(u),
-        v
+        v * 2.0 - 1.0
     ])
 
 

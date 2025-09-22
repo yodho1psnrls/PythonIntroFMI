@@ -35,7 +35,9 @@ class Factory(MeshFactory):
             raise RuntimeError("the given equation function should be callable")
         mesh = Mesh(self.grid.points, self.grid.faces)
         for p in mesh.points:
-            p.norm = glm.normalize(par.gradient(p.uv, eq))
+            # h = 0.5 * (1 / self.grid.dim.x + 1/self.grid.dim.y)
+            h = par.eps
+            p.norm = glm.normalize(par.gradient(p.uv, eq, h))
             p.pos = eq(p.uv)
         # points = [eq(uv) for uv in self.grid.points()]
         # faces = self.grid.faces()

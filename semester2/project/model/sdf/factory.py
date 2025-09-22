@@ -176,9 +176,11 @@ class Factory(MeshFactory):
                 front = self.grid[self.flat_point_id(point_id + e)].w
                 # if back * front < eps:
                 if sign(back) != sign(front):
+                    quad_ids = list()
+                    # if sign(back) == -1:
                     quad_ids = [point_id + x for x in q]
-                    if sign(back) == 1:
-                        quad_ids = list(reversed(quad_ids))
+                    # else:
+                    #     quad_ids = reversed([point_id + x for x in q])
                     mesh.faces.append(list())
                     # TODO: if back is -1 use quad, else use reversed quad
                     for qp in quad_ids:

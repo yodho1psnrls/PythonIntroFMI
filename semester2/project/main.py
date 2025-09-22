@@ -27,11 +27,6 @@ def for_each(func, vals: list):
 if __name__ == '__main__':
     pl = ViewSystem()
 
-    # gen = par.Factory(16, 16)
-    # mesh = gen.get_mesh(par.cone)
-    # # mesh = gen.get_mesh(par.sphere)
-    # # mesh = Mesh(gen.grid.points, gen.grid.faces)
-
     # BUG:
     # pts = [uv for uv in gen.grid.points()],
     # pts = list(gen.grid.points())
@@ -39,23 +34,31 @@ if __name__ == '__main__':
     # pts = list(par.normal_uvs(16, 16))
     # print(f"points: {len(pts)}")
 
+    # gen = par.Factory(16, 16)
+    # # mesh = gen.get_mesh(par.cone)
+    # mesh = gen.get_mesh(par.sphere)
+    # # mesh = Mesh(gen.grid.points, gen.grid.faces)
+
     gen = sdf.Factory(
-        glm.ivec3(22, 22, 22),
+        # glm.ivec3(22, 22, 22),
+        glm.ivec3(16, 16, 16),
         glm.vec3(-1.15, -1.15, -1.15),
         glm.vec3(1.15, 1.15, 1.15),
     )
 
-    # mesh = gen.get_mesh(sdf.Sphere())
-    mesh = gen.get_mesh(sdf.Torus(0.75, 0.25))
+    mesh = gen.get_mesh(sdf.Sphere())
+    # mesh = gen.get_mesh(sdf.Torus(0.75, 0.25))
 
-    for p in mesh.points:
-        p.pos += p.norm * 0.25
+    # for p in mesh.points:
+    #     p.pos += p.norm * 0.25
 
     print(type(mesh.points[0].pos))
     print(f"points: {len(mesh.points)}")
     print(f"quads: {len(mesh.faces)}")
     # print(issubclass(par.Generator, par.MeshFactory))
-    mesh.save("blqblq.obj")
+
+    mesh.save("blqblq")
+    # pl.draw_normals(mesh)
     pl.draw_mesh(mesh)
     # pl.draw_points(PointCloud(mesh.points))
 
