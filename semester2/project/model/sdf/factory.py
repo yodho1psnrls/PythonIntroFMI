@@ -5,7 +5,7 @@ from model.point_cloud import Vertex
 from model.mesh import Mesh
 # from model.sdf.equations import derivative
 from model import sdf
-from model.util import sign
+# from model.util import sign
 from sys import float_info
 eps = float_info.epsilon
 
@@ -27,7 +27,6 @@ eps = float_info.epsilon
 #     return result
 
 
-
 # Surface Nets
 # https://bonsairobo.medium.com/smooth-voxel-mapping-a-technical-deep-dive-on-real-time-surface-nets-and-texturing-ef06d0f8ca14
 # https://0fps.net/2012/07/10/smooth-voxel-terrain-part-1/
@@ -36,32 +35,32 @@ eps = float_info.epsilon
 # https://www.researchgate.net/publication/371492555_SurfaceNets-Draft
 # https://www.researchgate.net/publication/372871904_A_High-Performance_SurfaceNets_Discrete_Isocontouring_Algorithm
 class Factory(MeshFactory):
-    EDGES = [
+    EDGES = (
         glm.ivec3(1, 0, 0),
         glm.ivec3(0, 1, 0),
         glm.ivec3(0, 0, 1),
-    ]
-    QUADS = [
-        [
+    )
+    QUADS = (
+        (
             glm.ivec3(1, 0, 0),
             glm.ivec3(1, 1, 0),
             glm.ivec3(1, 1, 1),
             glm.ivec3(1, 0, 1),
-        ],
-        [
-            glm.ivec3(0, 1, 0),
-            glm.ivec3(1, 1, 0),
-            glm.ivec3(1, 1, 1),
+        ),
+        (
             glm.ivec3(0, 1, 1),
-        ],
-        [
+            glm.ivec3(1, 1, 1),
+            glm.ivec3(1, 1, 0),
+            glm.ivec3(0, 1, 0),
+        ),
+        (
             glm.ivec3(0, 0, 1),
             glm.ivec3(1, 0, 1),
             glm.ivec3(1, 1, 1),
             glm.ivec3(0, 1, 1),
-        ],
-    ]
-    CUBE_POINTS = [
+        ),
+    )
+    CUBE_POINTS = (
         glm.ivec3(0, 0, 0),
         glm.ivec3(1, 0, 0),
         glm.ivec3(0, 1, 0),
@@ -70,24 +69,24 @@ class Factory(MeshFactory):
         glm.ivec3(1, 0, 1),
         glm.ivec3(0, 1, 1),
         glm.ivec3(1, 1, 1),
-    ]
+    )
 
-    CUBE_EDGES = [
-        [glm.ivec3(0, 0, 0), glm.ivec3(1, 0, 0)],
-        [glm.ivec3(1, 0, 0), glm.ivec3(1, 1, 0)],
-        [glm.ivec3(1, 1, 0), glm.ivec3(0, 1, 0)],
-        [glm.ivec3(0, 1, 0), glm.ivec3(0, 0, 0)],
+    CUBE_EDGES = (
+        (glm.ivec3(0, 0, 0), glm.ivec3(1, 0, 0)),
+        (glm.ivec3(1, 0, 0), glm.ivec3(1, 1, 0)),
+        (glm.ivec3(1, 1, 0), glm.ivec3(0, 1, 0)),
+        (glm.ivec3(0, 1, 0), glm.ivec3(0, 0, 0)),
 
-        [glm.ivec3(0, 0, 1), glm.ivec3(1, 0, 1)],
-        [glm.ivec3(1, 0, 1), glm.ivec3(1, 1, 1)],
-        [glm.ivec3(1, 1, 1), glm.ivec3(0, 1, 1)],
-        [glm.ivec3(0, 1, 1), glm.ivec3(0, 0, 1)],
+        (glm.ivec3(0, 0, 1), glm.ivec3(1, 0, 1)),
+        (glm.ivec3(1, 0, 1), glm.ivec3(1, 1, 1)),
+        (glm.ivec3(1, 1, 1), glm.ivec3(0, 1, 1)),
+        (glm.ivec3(0, 1, 1), glm.ivec3(0, 0, 1)),
 
-        [glm.ivec3(0, 0, 0), glm.ivec3(0, 0, 1)],
-        [glm.ivec3(1, 0, 0), glm.ivec3(1, 0, 1)],
-        [glm.ivec3(1, 1, 0), glm.ivec3(1, 1, 1)],
-        [glm.ivec3(0, 1, 0), glm.ivec3(0, 1, 1)],
-    ]
+        (glm.ivec3(0, 0, 0), glm.ivec3(0, 0, 1)),
+        (glm.ivec3(1, 0, 0), glm.ivec3(1, 0, 1)),
+        (glm.ivec3(1, 1, 0), glm.ivec3(1, 1, 1)),
+        (glm.ivec3(0, 1, 0), glm.ivec3(0, 1, 1)),
+    )
 
     # a 3d point field from (-1, -1, -1) to (1, 1, 1)
     def points(self):
@@ -139,7 +138,7 @@ class Factory(MeshFactory):
             ep = [cube_id + i for i in edge]
             back = self.grid[self.flat_point_id(ep[0])]
             front = self.grid[self.flat_point_id(ep[1])]
-            if sign(front.w) != sign(back.w):
+            if front.w * back.w < 0.0:
                 h = abs(front.w) / (abs(front.w - back.w))
                 edge_mids.append(glm.lerp(glm.vec3(front), glm.vec3(back), h))
         if len(edge_mids) == 0:
@@ -174,13 +173,11 @@ class Factory(MeshFactory):
                 ONE = glm.ivec3(1, 1, 1)
                 back = self.grid[self.flat_point_id(point_id)].w
                 front = self.grid[self.flat_point_id(point_id + e)].w
-                # if back * front < eps:
-                if sign(back) != sign(front):
-                    quad_ids = list()
-                    # if sign(back) == -1:
+                # if sign(back) != sign(front):
+                if back * front < 0.0:
                     quad_ids = [point_id + x for x in q]
-                    # else:
-                    #     quad_ids = reversed([point_id + x for x in q])
+                    if front < 0.0:
+                        quad_ids = reversed(quad_ids)
                     mesh.faces.append(list())
                     # TODO: if back is -1 use quad, else use reversed quad
                     for qp in quad_ids:

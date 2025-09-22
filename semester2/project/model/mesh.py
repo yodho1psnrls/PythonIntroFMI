@@ -49,10 +49,25 @@ class Mesh(PointCloud):
 
     # the area of the polyhedron
     def area(self):
-        pass
+        area = 0.0
+        # The shoelace formula, but used in 3d,
+        # We assume that same face points lie on the same plane !
+        # And we assume all faces to have consistent ordering
+        #  of their points, relative to the face surface normal
+        # Wont error handle this, because we allow small deviations
+        for face in self.faces:
+            N = len(face)
+            for i in range(N):
+                p0 = self.points[face[i]]
+                p1 = self.points[face[(i+1) % N]]
+                area += glm.length(glm.cross(p0.pos, p1.pos))
+        return abs(area)/2
 
     # polyhedron volume approximation
+    # https://stackoverflow.com/questions/1406029/how-to-calculate-the-volume-of-a-3d-mesh-object-the-surface-of-which-is-made-up
     def volume(self):
+        # you need to sum up all pyramids with
+        # origin(0, 0, 0) as tip and the face as a base
         pass
 
     # collapses/combines same position points into a single one
@@ -61,6 +76,9 @@ class Mesh(PointCloud):
     #  where at the top and botoom there are multiple points
     #  condensed in the same position
     def collapse_points(self):
+        pass
+
+    def load(self, file_path: str):
         pass
 
     # https://en.wikipedia.org/wiki/Wavefront_.obj_file
@@ -78,3 +96,17 @@ class Mesh(PointCloud):
                 # ids = [i + 1 for i in face]
                 ids = [f"{i+1}/{i+1}/{i+1}" for i in face]
                 f.write("f " + " ".join(ids) + "\n")
+
+    def update_normals(self):
+        for p in self.points:
+            p.norm = glm.vec3(0, 0, 0)
+        for face in self.faces:
+            N = len(face)
+            for i in range(N):
+                p0 = self.points[face[(i-1) % N]]
+                p1 = self.points[face[i]]
+                p2 = self.points[face[(i+1) % N]]
+                p1.norm += glm.cross(p2.pos-p1.pos, p0.pos-p1.pos)
+        for p in self.points:
+            p.norm = glm.normalize(p.norm)
+
