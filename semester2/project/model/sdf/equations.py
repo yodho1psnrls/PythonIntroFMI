@@ -40,6 +40,12 @@ def gradient(p: glm.vec3, eq, h=eps) -> glm.vec3:
 # https://iquilezles.org/articles/distfunctions/
 # https://www.shadertoy.com/
 
+# https://iquilezles.org/articles/smin/
+def smin(a: float, b: float, k: float = 0.1):
+    k *= 1.0
+    r = glm.exp2(-a/k) + glm.exp2(-b/k)
+    return -k*glm.log2(r)
+
 
 # The simplest SDF is of a sphere, it essentially
 #  gives you the distance from the given point p
@@ -62,3 +68,10 @@ class Torus:
     def __call__(self, p: glm.vec3) -> float:
         q = glm.vec2(glm.length(p.xz) - self.r0, p.y)
         return glm.length(q) - self.r1
+
+
+def pumpkin(p: glm.vec3) -> float:
+    ss = Sphere(0.5)
+    diff = glm.vec3(0.5, 0, 0)
+    return smin(ss(p-diff), ss(p+diff), 0.1)
+    # return min(ss(p-diff), ss(p+diff))

@@ -1,7 +1,7 @@
 # import model.parametric as par
 from model.mesh import Mesh
 from model.point_cloud import PointCloud
-from model.point_cloud import Vertex
+from model.vertex import Vertex
 from model import par
 from model import sdf
 from view.plot import ViewSystem
@@ -40,18 +40,18 @@ if __name__ == '__main__':
     # # mesh = Mesh(gen.grid.points, gen.grid.faces)
 
     gen = sdf.Factory(
-        glm.ivec3(12, 12, 12),
+        glm.ivec3(16, 16, 16),
         glm.vec3(-1.25, -1.25, -1.25),
         glm.vec3(1.25, 1.25, 1.25),
     )
 
-    mesh = gen.get_mesh(sdf.Sphere())
+    mesh = gen.get_mesh(sdf.pumpkin)
+    # mesh = gen.get_mesh(sdf.Sphere())
     # mesh = gen.get_mesh(sdf.Torus(0.75, 0.25))
 
-    mesh.update_normals()
-
-    for p in mesh.points:
-        p.pos += p.norm * 0.25
+    # mesh.update_normals()
+    # for p in mesh.points:
+    #     p.pos += p.norm * 0.25
 
     print(type(mesh.points[0].pos))
     print(f"points: {len(mesh.points)}")

@@ -1,7 +1,7 @@
 from model.mesh_factory import MeshFactory
 # import numpy as np
 import glm
-from model.point_cloud import Vertex
+from model.vertex import Vertex
 from model.mesh import Mesh
 # from model.sdf.equations import derivative
 from model import sdf
@@ -177,7 +177,7 @@ class Factory(MeshFactory):
                 if back * front < 0.0:
                     quad_ids = [point_id + x for x in q]
                     if front < 0.0:
-                        quad_ids = reversed(quad_ids)
+                        quad_ids.reverse()
                     mesh.faces.append(list())
                     # TODO: if back is -1 use quad, else use reversed quad
                     for qp in quad_ids:

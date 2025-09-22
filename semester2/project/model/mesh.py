@@ -1,7 +1,7 @@
 # import numpy as np
 import glm
 from model.point_cloud import PointCloud
-from model.point_cloud import Vertex
+from model.vertex import Vertex
 
 
 # a polyhedron class
@@ -22,14 +22,15 @@ class Mesh(PointCloud):
     # indices: list of polygons defined by point ids
     def __init__(
         self,
-        points=list[Vertex](),
-        faces=list[list[int]]()
+        points: list[Vertex] = None,
+        faces: list[list[int]] = None
     ):
         super().__init__(points)
-        self.faces = list(faces)
+        self.faces = list(faces) if faces else []
         # if not self.are_faces_valid():
         #     raise RuntimeError("one of the faces contains non-valid point index")
 
+    # TODO:
     # recursively split the polygons by their smallest
     #  diagonal, untill all polygon faces are triangles
     def triangulate(self):

@@ -2,7 +2,7 @@ from model.mesh_factory import MeshFactory
 # import numpy as np
 import glm
 from model.mesh import Mesh
-from model.point_cloud import Vertex
+from model.vertex import Vertex
 # import parametric as par
 from model import par
 

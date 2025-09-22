@@ -1,6 +1,6 @@
 import glm
 from model.mesh import Mesh
-from model.point_cloud import Vertex
+from model.vertex import Vertex
 from math import floor
 
 
