@@ -12,22 +12,19 @@ class Vertex:
         self.norm = norm    # surface normal (points up from the surface)
         self.uv = uv        # uv texture coordinates (from (0, 0) to (1, 1))
 
-    def __hash__(self):
-        return hash(self.pos) ^ (hash(self.norm) << 1) ^ (hash(self.uv) << 2)
-
     def __add__(self, other):
-        result = Vertex()
-        result.pos = self.pos + other.pos
-        result.norm = self.norm + other.norm
-        result.uv = self.uv + other.uv
-        return result
+        return Vertex(
+            self.pos + other.pos,
+            self.norm + other.norm,
+            self.uv + other.uv,
+        )
 
     def __sub__(self, other):
-        result = Vertex()
-        result.pos = self.pos - other.pos
-        result.norm = self.norm - other.norm
-        result.uv = self.uv - other.uv
-        return result
+        return Vertex(
+            self.pos - other.pos,
+            self.norm - other.norm,
+            self.uv - other.uv,
+        )
 
     def __mul__(self, scalar: float):
         return Vertex(
@@ -43,5 +40,8 @@ class Vertex:
             scalar * self.uv,
         )
 
-    def eq(self, other) -> bool:
+    def __eq__(self, other) -> bool:
         return self.pos == other.pos and self.norm == other.norm and self.uv == other.uv
+
+    def __hash__(self) -> int:
+        return hash(self.pos) ^ (hash(self.norm) << 1) ^ (hash(self.uv) << 2)
