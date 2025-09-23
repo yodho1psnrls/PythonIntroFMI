@@ -33,11 +33,19 @@ class Vertex:
             self.uv * scalar,
         )
 
-    def __rmul__(self, scalar: float):
+    # def __rmul__(self, scalar: float):
+    #     return Vertex(
+    #         scalar * self.pos,
+    #         scalar * self.norm,
+    #         scalar * self.uv,
+    #     )
+
+    # https://www.geeksforgeeks.org/python/operator-overloading-in-python/
+    def __truediv__(self, scalar: float):
         return Vertex(
-            scalar * self.pos,
-            scalar * self.norm,
-            scalar * self.uv,
+            self.pos / scalar,
+            self.norm / scalar,
+            self.uv / scalar,
         )
 
     def __eq__(self, other) -> bool:

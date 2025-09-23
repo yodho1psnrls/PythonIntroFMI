@@ -2,6 +2,23 @@
 import glm
 from model.point_cloud import PointCloud
 from model.vertex import Vertex
+from model.util import imin
+
+
+# len(list(polygon_diagonals(n))) == n*(n-3)/2
+def polygon_diagonals(n: int):
+    # same as the modulo operator, but instead of giving
+    # values from 0 to n-1, it gives from 1 to n
+    # def up_mod(i: int) -> int:
+    #     i = i % n
+    #     i += n * (i == 0)
+    #     return i
+
+    for i in range(0, n-2):
+        # for j in range(i+2, n+i-1):
+        # for j in range(i+2, imin(n, n+i-1)):
+        for j in range(i+2, n-(i == 0)):
+            yield (i, j)
 
 
 # a polyhedron class
@@ -29,12 +46,6 @@ class Mesh(PointCloud):
         self.faces = list(faces) if faces else []
         # if not self.are_faces_valid():
         #     raise RuntimeError("one of the faces contains non-valid point index")
-
-    # TODO:
-    # recursively split the polygons by their smallest
-    #  diagonal, untill all polygon faces are triangles
-    def triangulate(self):
-        pass
 
     def are_faces_nsided(self, n):
         for face in self.faces:
@@ -101,13 +112,32 @@ class Mesh(PointCloud):
     def update_normals(self):
         for p in self.points:
             p.norm = glm.vec3(0, 0, 0)
+        # for face in self.faces:
+        #     N = len(face)
+        #     for i in range(N):
+        #         p0 = self.points[face[(i-1) % N]]
+        #         p1 = self.points[face[i]]
+        #         p2 = self.points[face[(i+1) % N]]
+        #         p1.norm += glm.cross(p2.pos-p1.pos, p0.pos-p1.pos)
         for face in self.faces:
-            N = len(face)
-            for i in range(N):
-                p0 = self.points[face[(i-1) % N]]
-                p1 = self.points[face[i]]
-                p2 = self.points[face[(i+1) % N]]
-                p1.norm += glm.cross(p2.pos-p1.pos, p0.pos-p1.pos)
+            p0 = self.points[face[0]]
+            p1 = self.points[face[1]]
+            p2 = self.points[face[2]]
+            n = glm.cross(p2.pos-p1.pos, p0.pos-p1.pos)
+            for i in face:
+                self.points[i].norm += n
         for p in self.points:
             p.norm = glm.normalize(p.norm)
 
+    # TODO: recursively split the polygons by their smallest
+    #  diagonal, untill all polygon faces are triangles
+    # def triangulate(self):
+    #     pass
+
+    # Fast fan-like triangulation (Preserves consistent face order)
+    def triangulate(self):
+        triangles = []
+        for face in self.faces:
+            for i in range(1, len(face)-1):
+                triangles.append([face[0], face[i], face[i+1]])
+        self.faces = triangles

@@ -1,5 +1,6 @@
 # import model.parametric as par
 from model.mesh import Mesh
+from model.mesh import polygon_diagonals
 from model.point_cloud import PointCloud
 from model.vertex import Vertex
 from model import par
@@ -7,6 +8,7 @@ from model import sdf
 from view.plot import ViewSystem
 # import numpy as np
 import glm
+from view.engine import Engine
 
 
 class Foo:
@@ -24,6 +26,12 @@ def for_each(func, vals: list):
     return [func(x) for x in vals]
 
 
+if __name__ == '__main__':
+    eng = Engine()
+    eng.run()
+
+
+'''
 if __name__ == '__main__':
     pl = ViewSystem()
 
@@ -45,8 +53,8 @@ if __name__ == '__main__':
         glm.vec3(1.25, 1.25, 1.25),
     )
 
-    mesh = gen.get_mesh(sdf.pumpkin)
-    # mesh = gen.get_mesh(sdf.Sphere())
+    # mesh = gen.get_mesh(sdf.pumpkin)
+    mesh = gen.get_mesh(sdf.Sphere())
     # mesh = gen.get_mesh(sdf.Torus(0.75, 0.25))
 
     # mesh.update_normals()
@@ -67,4 +75,4 @@ if __name__ == '__main__':
     # pc = PointCloud(gen.points())
     # print(len(pc.points))
     # pl.draw_points(pc)
-
+'''
