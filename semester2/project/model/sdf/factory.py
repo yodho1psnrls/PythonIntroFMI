@@ -1,30 +1,16 @@
+import numpy as np
+from model.sdf.iso_field import IsoField
+from model.util import AXIS
 from model.mesh_factory import MeshFactory
-# import numpy as np
-import glm
-from model.vertex import Vertex
 from model.mesh import Mesh
-# from model.sdf.equations import derivative
-from model import sdf
-# from model.util import sign
-from sys import float_info
-eps = float_info.epsilon
+from model.point_cloud import vertex_dtype
+from model.sdf import gradient
+from model.util import lerp
 
 # TODO: Make such that the number of cubes is +1
 # but with the same ratio and min_pos, so a sphere
 # of radius one can be fully bounded by the field
 # from (-1, -1, -1) to (1, 1, 1)
-
-# def normal_xyz(n: glm.ivec3):
-#     result = [glm.vec3(0, 0, 0)]*(n.x*n.y*n.z)
-#     for i in range(n.x):
-#         for j in range(n.y):
-#             for k in range(n.z):
-#                 id = i * n.y * n.z + j * n.z + k
-#                 p = result[id]
-#                 p.x = i/n.x,
-#                 p.y = i/n.y,
-#                 p.z = i/n.z,
-#     return result
 
 
 # Surface Nets
@@ -34,163 +20,127 @@ eps = float_info.epsilon
 # https://medium.com/@ryandremer/implementing-surface-nets-in-godot-f48ecd5f29ff
 # https://www.researchgate.net/publication/371492555_SurfaceNets-Draft
 # https://www.researchgate.net/publication/372871904_A_High-Performance_SurfaceNets_Discrete_Isocontouring_Algorithm
-class Factory(MeshFactory):
-    EDGES = (
-        glm.ivec3(1, 0, 0),
-        glm.ivec3(0, 1, 0),
-        glm.ivec3(0, 0, 1),
-    )
-    QUADS = (
+# class Factory(MeshFactory, IsoField):
+class Factory(IsoField):
+    QUADS_PER_AXIS = np.array([
         (
-            glm.ivec3(1, 0, 0),
-            glm.ivec3(1, 1, 0),
-            glm.ivec3(1, 1, 1),
-            glm.ivec3(1, 0, 1),
+            (1, 0, 0),
+            (1, 1, 0),
+            (1, 1, 1),
+            (1, 0, 1),
         ),
         (
-            glm.ivec3(0, 1, 1),
-            glm.ivec3(1, 1, 1),
-            glm.ivec3(1, 1, 0),
-            glm.ivec3(0, 1, 0),
+            (0, 1, 1),
+            (1, 1, 1),
+            (1, 1, 0),
+            (0, 1, 0),
         ),
         (
-            glm.ivec3(0, 0, 1),
-            glm.ivec3(1, 0, 1),
-            glm.ivec3(1, 1, 1),
-            glm.ivec3(0, 1, 1),
+            (0, 0, 1),
+            (1, 0, 1),
+            (1, 1, 1),
+            (0, 1, 1),
         ),
-    )
-    CUBE_POINTS = (
-        glm.ivec3(0, 0, 0),
-        glm.ivec3(1, 0, 0),
-        glm.ivec3(0, 1, 0),
-        glm.ivec3(1, 1, 0),
-        glm.ivec3(0, 0, 1),
-        glm.ivec3(1, 0, 1),
-        glm.ivec3(0, 1, 1),
-        glm.ivec3(1, 1, 1),
-    )
+    ])
+    CUBE_POINTS = np.array([
+        (0, 0, 0),
+        (1, 0, 0),
+        (0, 1, 0),
+        (1, 1, 0),
+        (0, 0, 1),
+        (1, 0, 1),
+        (0, 1, 1),
+        (1, 1, 1),
+    ])
 
-    CUBE_EDGES = (
-        (glm.ivec3(0, 0, 0), glm.ivec3(1, 0, 0)),
-        (glm.ivec3(1, 0, 0), glm.ivec3(1, 1, 0)),
-        (glm.ivec3(1, 1, 0), glm.ivec3(0, 1, 0)),
-        (glm.ivec3(0, 1, 0), glm.ivec3(0, 0, 0)),
+    CUBE_EDGES = np.array([
+        ((0, 0, 0), (1, 0, 0)),
+        ((1, 0, 0), (1, 1, 0)),
+        ((1, 1, 0), (0, 1, 0)),
+        ((0, 1, 0), (0, 0, 0)),
 
-        (glm.ivec3(0, 0, 1), glm.ivec3(1, 0, 1)),
-        (glm.ivec3(1, 0, 1), glm.ivec3(1, 1, 1)),
-        (glm.ivec3(1, 1, 1), glm.ivec3(0, 1, 1)),
-        (glm.ivec3(0, 1, 1), glm.ivec3(0, 0, 1)),
+        ((0, 0, 1), (1, 0, 1)),
+        ((1, 0, 1), (1, 1, 1)),
+        ((1, 1, 1), (0, 1, 1)),
+        ((0, 1, 1), (0, 0, 1)),
 
-        (glm.ivec3(0, 0, 0), glm.ivec3(0, 0, 1)),
-        (glm.ivec3(1, 0, 0), glm.ivec3(1, 0, 1)),
-        (glm.ivec3(1, 1, 0), glm.ivec3(1, 1, 1)),
-        (glm.ivec3(0, 1, 0), glm.ivec3(0, 1, 1)),
-    )
+        ((0, 0, 0), (0, 0, 1)),
+        ((1, 0, 0), (1, 0, 1)),
+        ((1, 1, 0), (1, 1, 1)),
+        ((0, 1, 0), (0, 1, 1)),
+    ])
 
-    # a 3d point field from (-1, -1, -1) to (1, 1, 1)
-    def points(self):
-        for i in range(self.n.x + 1):
-            for j in range(self.n.y + 1):
-                for k in range(self.n.z + 1):
-                    scale = self.max_pos - self.min_pos
-                    offset = self.min_pos
-                    yield glm.vec3(
-                        i/self.n.x,
-                        j/self.n.y,
-                        k/self.n.z,
-                    ) * scale + offset
+    def possible_quads(self) -> int:
+        n = self.dim - np.array([1, 1, 1])
+        return 3*n[0]*n[1]*n[2]
 
-    def __init__(self, dim: glm.ivec3, min_pos=glm.vec3(-1, -1, -1), max_pos=glm.vec3(1, 1, 1)):
-        self.n = glm.ivec3(dim)
-        self.min_pos = glm.vec3(min_pos)
-        self.max_pos = glm.vec3(max_pos)
-        # we will use the 4th coordinate to cache the sdf value
-        self.grid = [glm.vec4(p.x, p.y, p.z, 0.0) for p in self.points()]
+    def __init__(self, dim: list[int], min_pos=[-1, -1, -1], max_pos=[1, 1, 1]):
+        super().__init__(dim, min_pos, max_pos)
+        # Cache the cell centers
+        # self.cell_centers = np.zeros((self.cells_count()), dtype=vertex_dtype)
+        # for c in self.cell_ids():
+        #     self.cell_centers[self.flat_cell_id(c)][0] = self.cell_center(c)
 
-    def flat_point_id(self, id: glm.ivec3) -> int:
-        n = self.n + glm.ivec3(1, 1, 1)
-        return id.x * n.y * n.z + id.y * n.z + id.z
-
-    # def grid_id(self, id: int) -> glm.ivec3:
-    #     return glm.ivec3(
-    #         id,
-    #         id,
-    #         id % self.n.z,
-    #     )
-
-    def calc_sdf(self, sdf):
-        if not callable(sdf):
-            raise RuntimeError("the given sdf equation function should be callable")
-        for p in self.grid:
-            p.w = sdf(glm.vec3(p.x, p.y, p.z))
-
-    # def cube_center(self, cube_id: glm.ivec3) -> glm.vec3:
-    #     p = glm.vec3(0.0, 0.0, 0.0)
+    # def cell_center(self, cell_id: np.array) -> np.array:
+    #     p = np.zeros((3), dtype=np.float32)
     #     for diff in Factory.CUBE_POINTS:
-    #         i = cube_id + diff
-    #         p += glm.vec3(self.grid[self.flat_point_id(i)])
+    #         i = cell_id + diff
+    #         p += self.points[self.flat_point_id(i)][:-1]
     #     return p / len(Factory.CUBE_POINTS)
 
-    def cube_center(self, cube_id: glm.ivec3) -> glm.vec3:
-        edge_mids = list()
+    def cell_center(self, cell_id: np.array) -> np.array:
+        if cell_id.shape[0] != 3:
+            raise RuntimeError("the given id should be 3 integers")
+        center = np.zeros((3), dtype=np.float32)
+        num_edges = 0
         for edge in Factory.CUBE_EDGES:
-            ep = [cube_id + i for i in edge]
-            back = self.grid[self.flat_point_id(ep[0])]
-            front = self.grid[self.flat_point_id(ep[1])]
-            if front.w * back.w < 0.0:
-                h = abs(front.w) / (abs(front.w - back.w))
-                edge_mids.append(glm.lerp(glm.vec3(front), glm.vec3(back), h))
-        if len(edge_mids) == 0:
+            ep = [cell_id + i for i in edge]
+            back = self.points[self.flat_point_id(ep[0])]
+            front = self.points[self.flat_point_id(ep[1])]
+            if front[-1] * back[-1] < 0.0:
+                h = abs(front[-1]) / (abs(front[-1] - back[-1]))
+                center += lerp(front[:-1], back[:-1], h)
+                num_edges += 1
+        if num_edges == 0:
             raise RuntimeError("You need at least one of the cube edges to intersect with the surface")
-        return sum(edge_mids) / len(edge_mids)
+        return center / num_edges
 
-    def point_ids(self):
-        for i in range(self.n.x + 1):
-            for j in range(self.n.y + 1):
-                for k in range(self.n.z + 1):
-                    yield glm.ivec3(i, j, k)
-
-    def inner_point_ids(self):
-        for i in range(1, self.n.x):
-            for j in range(1, self.n.y):
-                for k in range(1, self.n.z):
-                    yield glm.ivec3(i, j, k)
-
-    def cube_ids(self):
-        for i in range(self.n.x):
-            for j in range(self.n.y):
-                for k in range(self.n.z):
-                    yield glm.ivec3(i, j, k)
-
+    # NOTE: You can also cache a bitmask for all edges
+    # that gives 1 or 0 if the edge is intersecting with the surface
+    # and then in the bilinear interpolation for the cube center
+    # you can add them branchlessly and then always divide by 8
     def get_mesh(self, eq):
-        self.calc_sdf(eq)
-        field_to_mesh = dict()  # point field id to its flat id in the mesh
-        mesh = Mesh()
-
+        super().update(eq)
+        faces = []
+        points = []
+        field_to_mesh_point_id = np.full(self.cells_count(), -1, dtype=np.int32)
         for point_id in self.inner_point_ids():
-            for e, q in zip(Factory.EDGES, Factory.QUADS):
-                ONE = glm.ivec3(1, 1, 1)
-                back = self.grid[self.flat_point_id(point_id)].w
-                front = self.grid[self.flat_point_id(point_id + e)].w
+            for e, q in zip(AXIS, Factory.QUADS_PER_AXIS):
+                ONE = np.ones((3), dtype=np.int32)
+                back = self.points[self.flat_point_id(ONE+point_id)][-1]
+                front = self.points[self.flat_point_id(ONE+point_id + e)][-1]
                 # if sign(back) != sign(front):
                 if back * front < 0.0:
-                    quad_ids = [point_id + x for x in q]
-                    if front < 0.0:
-                        quad_ids.reverse()
-                    mesh.faces.append(list())
-                    # TODO: if back is -1 use quad, else use reversed quad
-                    for qp in quad_ids:
-                        if qp in field_to_mesh:
-                            mesh.faces[-1].append(field_to_mesh[qp])
-                        else:
-                            field_to_mesh[qp] = len(mesh.points)
-                            mesh.faces[-1].append(len(mesh.points))
-                            mesh.points.append(Vertex(self.cube_center(qp - ONE)))
+                    quad_ids = q + point_id
+                    if front < 0.0:  # reverse for consistent orientation
+                        quad_ids = quad_ids[::-1]
+                    faces.append([])
+                    for cell_id in quad_ids:
+                        flat_id = self.flat_cell_id(cell_id)
+                        if field_to_mesh_point_id[flat_id] == -1:
+                            field_to_mesh_point_id[flat_id] = len(points)
+                            points.append(self.cell_center(cell_id))
+                        faces[-1].append(field_to_mesh_point_id[flat_id])
+
+        mesh = Mesh(
+            [(p, (0.0, 0.0, 0.0), (0.0, 0.0)) for p in points],
+            faces
+        )
 
         # gradient descend
         for p in mesh.points:
-            p.norm = glm.normalize(sdf.gradient(p.pos, eq))
-            p.pos -= eq(p.pos) * p.norm
+            p['norm'] = gradient(p['pos'], eq)
+            p['norm'] /= np.linalg.norm(p['norm'])
+            p['pos'] -= eq(p['pos']) * p['norm']
 
         return mesh

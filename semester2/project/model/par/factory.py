@@ -1,8 +1,8 @@
 from model.mesh_factory import MeshFactory
-# import numpy as np
-import glm
+import numpy as np
+# import glm
 from model.mesh import Mesh
-from model.vertex import Vertex
+# from model.vertex import Vertex
 # import parametric as par
 from model import par
 
@@ -14,7 +14,7 @@ from model import par
 # Equation to a 3D mesh
 class Factory(MeshFactory):
     def __init__(self, rows: int, cols: int):
-        self.grid = par.QuadGrid(glm.ivec2(rows, cols))
+        self.grid = par.QuadGrid(rows, cols)
         # points = [
         #     Vertex(glm.vec3(uv.x, uv.y, 0), glm.vec3(0, 0, 1), uv)
         #     for uv in self.grid.points()
@@ -34,11 +34,13 @@ class Factory(MeshFactory):
         if not callable(eq):
             raise RuntimeError("the given equation function should be callable")
         mesh = Mesh(self.grid.points, self.grid.faces)
+        # mesh = Mesh(self.grid.points.copy(), self.grid.faces.copy())
         for p in mesh.points:
             # h = 0.5 * (1 / self.grid.dim.x + 1/self.grid.dim.y)
             h = par.eps
-            p.norm = glm.normalize(par.gradient(p.uv, eq, h))
-            p.pos = eq(p.uv)
+            p['norm'] = par.gradient(p['uv'], eq, h)
+            p['norm'] /= np.linalg.norm(p['norm'])
+            p['pos'] = eq(p['uv'])
         # points = [eq(uv) for uv in self.grid.points()]
         # faces = self.grid.faces()
         # return Mesh(points, faces)

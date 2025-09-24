@@ -1,32 +1,32 @@
-# import numpy as np
-import glm
+import numpy as np
 from math import sqrt
 from math import sin
 from math import cos
 from math import exp
 from math import pi
 from model.util import eps
-# from model.util import AXIS
+from model.util import AXIS
+from model.util import clamp
 
 
 # This gives a 3d vector with the derivatives of the sdf
-def gradient(p: glm.vec3, eq, h=eps) -> glm.vec3:
-    ex = glm.vec3(h, 0.0, 0.0)
-    ey = glm.vec3(0.0, h, 0.0)
-    ez = glm.vec3(0.0, 0.0, h)
+def gradient(p: np.array, eq, h=eps) -> np.array:
+    if p.shape[0] != 3:
+        raise RuntimeError("p should be a 3d vector")
+    e = AXIS * h
     # Forward differentiation (Faster, and precise enough with small eps)
     # p_val = eq(p)
     # return glm.vec3(
     #     eq(p+ex) - p_val,
     #     eq(p+ey) - p_val,
     #     eq(p+ez) - p_val,
-    # ) / eps
+    # ) / h
     # Central differentiation (More accurate, even with bigger eps values)
-    return glm.vec3(
-        eq(p+ex) - eq(p-ex),
-        eq(p+ey) - eq(p-ey),
-        eq(p+ez) - eq(p-ez),
-    ) / (2.0*eps)
+    return np.array([
+        eq(p+e[0]) - eq(p-e[0]),
+        eq(p+e[1]) - eq(p-e[1]),
+        eq(p+e[2]) - eq(p-e[2]),
+    ]) / (2.0*h)
 
 
 # Below are a bunch of SDFs(Signed Distance Functions) which
@@ -41,10 +41,10 @@ def gradient(p: glm.vec3, eq, h=eps) -> glm.vec3:
 # https://www.shadertoy.com/
 
 # https://iquilezles.org/articles/smin/
-def smin(a: float, b: float, k: float = 0.1):
-    k *= 1.0
-    r = glm.exp2(-a/k) + glm.exp2(-b/k)
-    return -k*glm.log2(r)
+# def smin(a: float, b: float, k: float = 0.1):
+#     k *= 1.0
+#     r = glm.exp2(-a/k) + glm.exp2(-b/k)
+#     return -k*glm.log2(r)
 
 
 # The simplest SDF is of a sphere, it essentially
@@ -54,9 +54,10 @@ class Sphere:
     def __init__(self, radius=1.0):
         self.r = radius
 
-    def __call__(self, p: glm.vec3) -> float:
-        return sqrt(p.x*p.x+p.y*p.y+p.z*p.z) - self.r
-    # return glm.length(p) - self.r
+    def __call__(self, p: np.array) -> float:
+        if p.shape[0] != 3:
+            raise RuntimeError("p should be a 3d vector")
+        return np.linalg.norm(p) - self.r
 
 
 # Torus | Donut Shape
@@ -65,13 +66,34 @@ class Torus:
         self.r0 = major_radius
         self.r1 = minor_radius
 
-    def __call__(self, p: glm.vec3) -> float:
-        q = glm.vec2(glm.length(p.xz) - self.r0, p.y)
-        return glm.length(q) - self.r1
+    def __call__(self, p: np.array) -> float:
+        if p.shape[0] != 3:
+            raise RuntimeError("p should be a 3d vector")
+        # q = np.array([np.linalg.norm(p.xz) - self.r0, p.y])
+        q = np.array([np.linalg.norm(np.array([p[0], p[2]])) - self.r0, p[1]])
+        return np.linalg.norm(q) - self.r1
 
 
-def pumpkin(p: glm.vec3) -> float:
-    ss = Sphere(0.5)
-    diff = glm.vec3(0.5, 0, 0)
-    return smin(ss(p-diff), ss(p+diff), 0.1)
-    # return min(ss(p-diff), ss(p+diff))
+def polynomial_degree3(p: np.array) -> float:
+    x, y, z = p[0], p[1], p[2]
+    return (1-3*x-3*y-3*z)*(x*y+x*z+y*z)+6*x*y*z
+
+
+class Capsule:
+    def __init__(self, a: np.array, b: np.array, r: float):
+        self.a = np.array(a, dtype=np.float32)
+        self.b = np.array(b, dtype=np.float32)
+        self.r = r
+
+    def __call__(self, p: np.array):
+        pa = p - self.a
+        ba = self.b - self.a;
+        h = clamp(np.dot(pa, ba) / np.dot(ba, ba), 0.0, 1.0)
+        return np.linalg.norm(pa - ba*h) - self.r
+
+
+# def pumpkin(p: np.array) -> float:
+#     ss = Sphere(0.5)
+#     diff = np.array([0.5, 0, 0])
+#     return smin(ss(p-diff), ss(p+diff), 0.1)
+#     # return min(ss(p-diff), ss(p+diff))

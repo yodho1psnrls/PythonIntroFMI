@@ -1,8 +1,6 @@
-# import numpy as np
-import glm
+import numpy as np
 from model.point_cloud import PointCloud
-from model.vertex import Vertex
-from model.util import imin
+from model.point_cloud import vertex_dtype
 
 
 # len(list(polygon_diagonals(n))) == n*(n-3)/2
@@ -24,7 +22,7 @@ def polygon_diagonals(n: int):
 # a polyhedron class
 class Mesh(PointCloud):
     def is_valid_point(self, id: int) -> bool:
-        return 0 <= id and id < len(self.points)
+        return 0 <= id and id < len(self.positions)
 
     def are_faces_valid(self) -> bool:
         for face in self.faces:
@@ -39,25 +37,31 @@ class Mesh(PointCloud):
     # indices: list of polygons defined by point ids
     def __init__(
         self,
-        points: list[Vertex] = None,
-        faces: list[list[int]] = None
+        points: np.array = None,
+        faces: np.array = None
     ):
         super().__init__(points)
-        self.faces = list(faces) if faces else []
-        # if not self.are_faces_valid():
-        #     raise RuntimeError("one of the faces contains non-valid point index")
+        if faces is not None:
+            self.faces = np.array(faces, dtype=np.int32)
+        else:
+            self.faces = np.array([], dtype=np.int32)
+        if len(self.faces.shape) != 2:
+            raise RuntimeError("the faces should be a matrix of integers")
+        if not self.are_faces_valid():
+            raise RuntimeError("one of the faces contains non-valid point index")
 
-    def are_faces_nsided(self, n):
+    def __sizeof__(self) -> int:
+        return len(self.faces)
+
+    def __iter__(self):
         for face in self.faces:
-            if not len(face) == n:
-                return False
-        return True
+            return self.points[face]
 
-    def is_triangulated(self):
+    def are_faces_nsided(self, n: int) -> bool:
+        return self.faces.shape[1] == n
+
+    def is_triangulated(self) -> bool:
         return self.are_faces_nsided(3)
-
-    # def face_points(self, face_id):
-    #     return [self.points[i] for i in self.faces[face_id]]
 
     # the area of the polyhedron
     def area(self):
@@ -70,9 +74,9 @@ class Mesh(PointCloud):
         for face in self.faces:
             N = len(face)
             for i in range(N):
-                p0 = self.points[face[i]]
-                p1 = self.points[face[(i+1) % N]]
-                area += glm.length(glm.cross(p0.pos, p1.pos))
+                p0 = self.positions[face[i]]
+                p1 = self.positions[face[(i+1) % N]]
+                area += np.linalg.norm(np.linalg.cross(p0, p1))
         return abs(area)/2
 
     # polyhedron volume approximation
@@ -98,46 +102,61 @@ class Mesh(PointCloud):
         if file_path[-4:] != '.obj':
             file_path += '.obj'
         with open(file_path, "w") as f:
-            for p in self.points:
-                f.write(f"v  {p.pos.x} {p.pos.y} {p.pos.z}\n")
-            for p in self.points:
-                f.write(f"vt {p.uv.x} {p.uv.y}\n")
-            for p in self.points:
-                f.write(f"vn {p.norm.x} {p.norm.y} {p.norm.z}\n")
+            for p in self.positions:
+                f.write(f"v  {p[0]} {p[1]} {p[2]}\n")
+            for p in self.uvs:
+                f.write(f"vt {p[0]} {p[1]}\n")
+            for p in self.normals:
+                f.write(f"vn {p[0]} {p[1]} {p[2]}\n")
             for face in self.faces:
                 # ids = [i + 1 for i in face]
                 ids = [f"{i+1}/{i+1}/{i+1}" for i in face]
                 f.write("f " + " ".join(ids) + "\n")
 
     def update_normals(self):
-        for p in self.points:
-            p.norm = glm.vec3(0, 0, 0)
-        # for face in self.faces:
-        #     N = len(face)
-        #     for i in range(N):
-        #         p0 = self.points[face[(i-1) % N]]
-        #         p1 = self.points[face[i]]
-        #         p2 = self.points[face[(i+1) % N]]
-        #         p1.norm += glm.cross(p2.pos-p1.pos, p0.pos-p1.pos)
+        for n in self.normals:
+            n = (0, 0, 0)
         for face in self.faces:
-            p0 = self.points[face[0]]
-            p1 = self.points[face[1]]
-            p2 = self.points[face[2]]
-            n = glm.cross(p2.pos-p1.pos, p0.pos-p1.pos)
+            p0 = self.positions[face[0]]
+            p1 = self.positions[face[1]]
+            p2 = self.positions[face[2]]
+            n = np.linalg.cross(p2-p1, p0-p1)
             for i in face:
-                self.points[i].norm += n
-        for p in self.points:
-            p.norm = glm.normalize(p.norm)
+                self.normals[i] += n
+        for n in self.normals:
+            n /= np.linalg.norm(n)
 
     # TODO: recursively split the polygons by their smallest
     #  diagonal, untill all polygon faces are triangles
     # def triangulate(self):
     #     pass
 
+    # Trims/Removes all points which are not used in any of the faces
+    #  (also remaps the indices in the faces to the new point ids)
+    def trim(self):
+        old_to_new_id = dict()
+        for face in self.faces:
+            for i in range(len(face)):
+                if face[i] in old_to_new_id:
+                    face[i] = old_to_new_id[face[i]]
+                else:
+                    new_i = len(old_to_new_id)
+                    old_to_new_id[face[i]] = new_i
+                    face[i] = new_i
+        new_points = np.zeros((len(old_to_new_id)), dtype=vertex_dtype)
+        for old_i, new_i in old_to_new_id.items():
+            new_points[new_i] = self.points[old_i]
+        self.points = new_points
+
     # Fast fan-like triangulation (Preserves consistent face order)
     def triangulate(self):
-        triangles = []
-        for face in self.faces:
-            for i in range(1, len(face)-1):
-                triangles.append([face[0], face[i], face[i+1]])
+        if self.is_triangulated():
+            return
+        num_faces = self.faces.shape[0]
+        tri_per_face = self.faces.shape[1] - 2
+        triangles = np.zeros((num_faces * tri_per_face, 3), dtype=np.int32)
+        for fi in range(len(self.faces)):
+            face = self.faces[fi]
+            for i in range(0, tri_per_face):
+                triangles[fi*tri_per_face+i] = ([face[0], face[i+1], face[i+2]])
         self.faces = triangles

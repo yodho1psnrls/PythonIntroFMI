@@ -25,9 +25,8 @@ class ViewSystem:
         )
 
     def draw_points(self, pc: PointCloud):
-        for point in pc.points:
-            p = point.pos
-            self.ax.plot(p.x, p.y, p.z, 'o', markersize=10)  # red circles
+        for p in pc.positions:
+            self.ax.plot(p[0], p[1], p[2], 'o', markersize=10)  # red circles
             # self.ax.plot(p.x, p.y, 'ro', markersize=10)  # red circles
         # self.ax.scatter(pc.points[:, 0], pc.points[:, 1], pc.points[:, 2],
         #     color='blue', s=10, alpha=1.0)
@@ -35,7 +34,7 @@ class ViewSystem:
 
     def draw_mesh(self, mesh: Mesh):
         m = Poly3DCollection(
-            [[mesh.points[i].pos for i in face] for face in mesh.faces],
+            [[mesh.positions[i] for i in face] for face in mesh.faces],
             facecolors='lightblue',
             edgecolors='gray',
             linewidths=1,
@@ -45,12 +44,12 @@ class ViewSystem:
         plt.show()
 
     def draw_normals(self, pc: PointCloud):
-        pxs = [p.pos.x for p in pc.points]
-        pys = [p.pos.y for p in pc.points]
-        pzs = [p.pos.z for p in pc.points]
-        nxs = [p.norm.x for p in pc.points]
-        nys = [p.norm.y for p in pc.points]
-        nzs = [p.norm.z for p in pc.points]
+        pxs = [p[0] for p in pc.positions]
+        pys = [p[1] for p in pc.positions]
+        pzs = [p[2] for p in pc.positions]
+        nxs = [n[0] for n in pc.normals]
+        nys = [n[1] for n in pc.normals]
+        nzs = [n[2] for n in pc.normals]
         self.ax.quiver(pxs, pys, pzs, nxs, nys, nzs,
                        length=0.15, color='green', normalize=False)
 

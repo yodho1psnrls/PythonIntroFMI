@@ -1,6 +1,7 @@
-# numpy
 # numpy-quaternion
-PyGLM
+# PyGLM
+numpy
+numba
 matplotlib
 PyOpenGL
 glfw
