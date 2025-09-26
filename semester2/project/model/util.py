@@ -3,6 +3,8 @@ import numpy as np
 # from sys import float_info
 # very small positive number
 # eps = float_info.epsilon
+from functools import wraps
+import time
 
 # eps = 1e-7
 eps = 1e-5
@@ -111,4 +113,17 @@ def look_at(target, eye=np.array([0.0, 0.0, 0.0]), up=np.array([0.0, 0.0, 1.0]))
     ])
 '''
 
+
+# https://dev.to/kcdchennai/python-decorator-to-measure-execution-time-54hk
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        # print(f'Function {func.__name__}{args} {kwargs} took {total_time:.4f}s')
+        print(f'{func.__name__} took {total_time:.4f}s')
+        return result
+    return timeit_wrapper
 

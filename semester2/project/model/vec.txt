@@ -1,3 +1,0 @@
-from collections import namedtuple
-Vec2 = namedtuple('Vec2', ['x', 'y'])
-Vec3 = namedtuple('Vec3', ['x', 'y', 'z'])

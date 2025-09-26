@@ -17,7 +17,7 @@ class Engine:
         # Directly use it in the engine constructor,
         #  as we wont use other shaders
         self.shader.use()
-        self.meshes = []
+        self.renderables = []
 
     def print_version(self):
         print(GL.glGetString(GL.GL_VERSION).decode())
@@ -31,7 +31,7 @@ class Engine:
     #     0.0,  0.5, 0.0
     # ], dtype=np.float32)
 
-    def _draw(self, r: Renderable):
+    def draw(self, r: Renderable):
         GL.glBindVertexArray(r.VAO)
         # GL.glDrawArrays(GL.GL_TRIANGLES, 0, 3) # Draws the Mesh !
         pass
@@ -39,11 +39,11 @@ class Engine:
     def run(self):
         while not glfw.window_should_close(self.window):
             GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-            for m in self.meshes:
-                self._draw(m)
+            for r in self.renderables:
+                self.draw(r)
             glfw.swap_buffers(self.window)
             glfw.poll_events()
         glfw.terminate()
 
     def load_mesh(self, mesh: Mesh):
-        self.meshes.append(Renderable(mesh))
+        self.renderables.append(Renderable(mesh))

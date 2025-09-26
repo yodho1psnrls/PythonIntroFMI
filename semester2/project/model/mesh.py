@@ -1,6 +1,7 @@
 import numpy as np
 from model.point_cloud import PointCloud
 from model.point_cloud import vertex_dtype
+from model.util import timeit
 
 
 # len(list(polygon_diagonals(n))) == n*(n-3)/2
@@ -148,6 +149,26 @@ class Mesh(PointCloud):
             new_points[new_i] = self.points[old_i]
         self.points = new_points
 
+    '''
+    def trim(self):
+        old_to_new_id = np.full((len(self.points)), -1)
+        found_points = 0
+        for face in self.faces:
+            for i in range(len(face)):
+                if old_to_new_id[face[i]] != -1:
+                    face[i] = old_to_new_id[face[i]]
+                else:
+                    new_i = found_points
+                    old_to_new_id[face[i]] = new_i
+                    face[i] = new_i
+                    found_points += 1
+        new_points = np.zeros((found_points), dtype=vertex_dtype)
+        survived_points = self.points[]
+        # for old_i, new_i in old_to_new_id.items():
+        #     new_points[new_i] = self.points[old_i]
+        self.points = new_points
+    '''
+
     # Fast fan-like triangulation (Preserves consistent face order)
     def triangulate(self):
         if self.is_triangulated():
@@ -160,3 +181,9 @@ class Mesh(PointCloud):
             for i in range(0, tri_per_face):
                 triangles[fi*tri_per_face+i] = ([face[0], face[i+1], face[i+2]])
         self.faces = triangles
+
+    def invert(self):
+        for f in self.faces:
+            f = f[::-1]
+        for n in self.normals:
+            n *= -1.0

@@ -9,6 +9,10 @@ from model.util import AXIS
 from model.util import clamp
 
 
+def test_eq(p: np.array) -> float:
+    return np.linalg.norm(p) - 0.75
+
+
 # This gives a 3d vector with the derivatives of the sdf
 def gradient(p: np.array, eq, h=eps) -> np.array:
     if p.shape[0] != 3:

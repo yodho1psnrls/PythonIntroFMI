@@ -27,6 +27,7 @@ class PointCloud:
 
     @property
     def positions(self) -> np.array:
+        # return self.points[:, 0]
         return self.points['pos']
 
     @positions.setter
@@ -38,6 +39,7 @@ class PointCloud:
 
     @property
     def normals(self) -> np.array:
+        # return self.points[:, 1]
         return self.points['norm']
 
     @normals.setter
@@ -49,6 +51,7 @@ class PointCloud:
 
     @property
     def uvs(self) -> np.array:
+        # return self.points[:, 2]
         return self.points['uv']
 
     @uvs.setter
