@@ -5,6 +5,7 @@ from math import cos
 from math import exp
 from math import pi
 from model.util import eps
+import numexpr as ne
 
 
 # Derivative of a parametric equation with respect to u
@@ -31,6 +32,30 @@ def bitangent(uv: np.array, eq, h=eps) -> np.array:
 #  equation with respect to u and v (points outwards from the surface)
 def gradient(uv: np.array, eq, h=eps) -> np.array:
     return np.linalg.cross(tangent(uv, eq, h), bitangent(uv, eq, h))
+
+
+class PAR:
+    def __init__(self, eq: str):
+        eqs = eq.split(',')
+        if len(eqs) != 3:
+            raise ValueError("Three equations separated by comma are needed for a parametric function")
+        self.eqx, self.eqy, self.eqz = eqs
+
+    # def __init__(self, eqx: str, eqy: str, eqz: str):
+    #     self.eqx = eqx
+    #     self.eqy = eqy
+    #     self.eqz = eqz
+
+    def evaluate(self, u, v):
+        u = np.array(u, dtype=np.float32)
+        v = np.array(v, dtype=np.float32)
+        local_dict = {"u": u, "v": v}
+
+        x = ne.evaluate(self.eqx, local_dict=local_dict)
+        y = ne.evaluate(self.eqy, local_dict=local_dict)
+        z = ne.evaluate(self.eqz, local_dict=local_dict)
+
+        return np.stack((x, y, z), axis=-1)
 
 
 def sphere(uv: np.array):

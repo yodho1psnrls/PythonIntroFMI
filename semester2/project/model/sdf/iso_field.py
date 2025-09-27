@@ -34,13 +34,14 @@ class IsoField:
     def update(self, sdf_expr):
         # if not callable(sdf):
         #     raise RuntimeError("the given sdf equation function should be callable")
-        for p in self.points:
-            p[-1] = sdf_expr(p[:-1])
+        # for p in self.points:
+        #     p[-1] = sdf_expr(p[:-1])
         # x = self.points[:, 0]
         # y = self.points[:, 1]
         # z = self.points[:, 2]
-        # w = self.points[:, 3]
-        # w = ne.evaluate(sdf_expr)
+        # local_dict = {'x':x, 'y':y, 'z':z}
+        # self.points[:, 3] = ne.evaluate(sdf_expr, local_dict=local_dict)
+        self.points[:, -1] = sdf_expr(self.points[:, :-1])
 
     def points_count(self) -> int:
         n = self.dim + np.array([1, 1, 1])
@@ -50,12 +51,14 @@ class IsoField:
         n = self.dim
         return n[0]*n[1]*n[2]
 
+    # TODO: https://numpy.org/devdocs//reference/generated/numpy.vectorize.html
     def flat_point_id(self, id: np.array) -> int:
         # if id.shape[0] != 3:
         #     raise RuntimeError(f"the given id should be 3 integers, not {id.shape[0]}")
         n = self.dim + np.array([1, 1, 1])
         return id[0] * n[1] * n[2] + id[1] * n[2] + id[2]
 
+    # TODO: https://numpy.org/devdocs//reference/generated/numpy.vectorize.html
     def flat_cell_id(self, id: np.array) -> int:
         # if id.shape[0] != 3:
         #     raise RuntimeError(f"the given id should be 3 integers, not {id.shape[0]}")

@@ -109,6 +109,7 @@ class Factory(IsoField):
     #         p += self.points[self.flat_point_id(i)][:-1]
     #     return p / len(Factory.CUBE_POINTS)
 
+    # TODO: https://numpy.org/devdocs//reference/generated/numpy.vectorize.html
     def cell_center(self, cell_id: np.array) -> np.array:
         if cell_id.shape[0] != 3:
             raise RuntimeError("the given id should be 3 integers")
@@ -119,7 +120,9 @@ class Factory(IsoField):
             back = self.points[self.flat_point_id(ep[0])]
             front = self.points[self.flat_point_id(ep[1])]
             if front[-1] * back[-1] <= 0.0:
-                h = abs(front[-1]) / (abs(front[-1] - back[-1]))
+                h = 0.5
+                if front[-1] != back[-1]:
+                    h = abs(front[-1] / (front[-1] - back[-1]))
                 center += lerp(front[:-1], back[:-1], h)
                 num_edges += 1
         if num_edges == 0:
@@ -236,10 +239,16 @@ class Factory(IsoField):
 
         # gradient descend
         start = time.time()
-        for p in mesh.points:
-            p['norm'] = gradient(p['pos'], eq)
-            p['norm'] /= np.linalg.norm(p['norm'])
-            p['pos'] -= eq(p['pos']) * p['norm']
+
+        # for p in mesh.points:
+        #     p['norm'] = gradient(p['pos'], eq)
+        #     p['norm'] /= np.linalg.norm(p['norm'])
+        #     p['pos'] -= eq(p['pos']) * p['norm']
+
+        mesh.normals = gradient(mesh.positions, eq)
+        mesh.normals /= np.linalg.norm(mesh.normals, axis=1, keepdims=True)
+        mesh.positions -= eq(mesh.positions)[:, np.newaxis] * mesh.normals
+
         end = time.time()
         print(f"Gradient: {end-start}")
 

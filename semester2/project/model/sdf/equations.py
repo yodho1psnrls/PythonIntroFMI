@@ -1,23 +1,15 @@
+from abc import ABC, abstractmethod
 import numpy as np
-from math import sqrt
-from math import sin
-from math import cos
-from math import exp
-from math import pi
-from model.util import eps
-from model.util import AXIS
-from model.util import clamp
-
-
-def test_eq(p: np.array) -> float:
-    return np.linalg.norm(p) - 0.75
+import numexpr as ne
+import model.util as u
 
 
 # This gives a 3d vector with the derivatives of the sdf
-def gradient(p: np.array, eq, h=eps) -> np.array:
+'''
+def gradient(p: np.array, eq, h=u.eps) -> np.array:
     if p.shape[0] != 3:
         raise RuntimeError("p should be a 3d vector")
-    e = AXIS * h
+    e = u.AXIS * h
     # Forward differentiation (Faster, and precise enough with small eps)
     # p_val = eq(p)
     # return glm.vec3(
@@ -31,6 +23,21 @@ def gradient(p: np.array, eq, h=eps) -> np.array:
         eq(p+e[1]) - eq(p-e[1]),
         eq(p+e[2]) - eq(p-e[2]),
     ]) / (2.0*h)
+'''
+
+
+def gradient(points: np.array, eq, h=u.eps) -> np.array:
+    e = u.AXIS * h
+    # return [[
+    #     eq(p+e[0]) - eq(p-e[0]),
+    #     eq(p+e[1]) - eq(p-e[1]),
+    #     eq(p+e[2]) - eq(p-e[2]),
+    # ] for p in points]
+    return np.stack((
+        eq(points+e[0]) - eq(points-e[0]),
+        eq(points+e[1]) - eq(points-e[1]),
+        eq(points+e[2]) - eq(points-e[2]),
+    ), axis=1) / (2.0 * h)
 
 
 # Below are a bunch of SDFs(Signed Distance Functions) which
@@ -51,53 +58,95 @@ def gradient(p: np.array, eq, h=eps) -> np.array:
 #     return -k*glm.log2(r)
 
 
-# The simplest SDF is of a sphere, it essentially
-#  gives you the distance from the given point p
-#  to the center of the sphere, minus its radius
-class Sphere:
-    def __init__(self, radius=1.0):
-        self.r = radius
+'''
+class SDF:
+    def __init__(self, eq: str):
+        self.eq = eq
 
-    def __call__(self, p: np.array) -> float:
-        if p.shape[0] != 3:
-            raise RuntimeError("p should be a 3d vector")
-        return np.linalg.norm(p) - self.r
+    def __str__(self):
+        return self.eq
 
+    def __or__(self, other):
+        return SDF(f"max(({self}), ({other}))")
 
-# Torus | Donut Shape
-class Torus:
-    def __init__(self, major_radius: float, minor_radius: float):
-        self.r0 = major_radius
-        self.r1 = minor_radius
+    def __and__(self, other):
+        return SDF(f"max(({self}), ({other}))")
 
-    def __call__(self, p: np.array) -> float:
-        if p.shape[0] != 3:
-            raise RuntimeError("p should be a 3d vector")
-        # q = np.array([np.linalg.norm(p.xz) - self.r0, p.y])
-        q = np.array([np.linalg.norm(np.array([p[0], p[2]])) - self.r0, p[1]])
-        return np.linalg.norm(q) - self.r1
+    def __call__(self, points):
+        x, y, z = points[:, 0], points[:, 1], points[:, 2]
+        local_dict = {"x": x, "y": y, "z": z}
+        return ne.evaluate(self.expr, local_dict=local_dict)
+'''
 
 
-def polynomial_degree3(p: np.array) -> float:
-    x, y, z = p[0], p[1], p[2]
-    return (1-3*x-3*y-3*z)*(x*y+x*z+y*z)+6*x*y*z
+class Equation:
+    def __init__(self, eq: str):
+        # ne.validate(eq)  # raises an exception if not valid expression
+        self.eq = eq
+
+    def __call__(self, points: np.array) -> np.array:
+        x, y, z = points[:, 0], points[:, 1], points[:, 2]
+        local_dict = {"x": x, "y": y, "z": z}
+        return ne.evaluate(self.eq, local_dict=local_dict)
 
 
-class Capsule:
-    def __init__(self, a: np.array, b: np.array, r: float):
-        self.a = np.array(a, dtype=np.float32)
-        self.b = np.array(b, dtype=np.float32)
+# Serves like decorator for sdfs
+class UnaryModifier(ABC):
+    def __init__(self, eq: Equation):
+        pass
+
+    @abstractmethod
+    def __call__(self, points: np.array) -> np.array:
+        pass
+
+
+# Combines two sdfs
+class BinaryModifier(ABC):
+    def __init__(self, lhs: Equation, rhs: Equation):
+        pass
+
+    @abstractmethod
+    def __call__(self, points: np.array) -> np.array:
+        pass
+
+
+class Inflate(UnaryModifier):
+    def __init__(self, eq: Equation, dist: float):
+        self.eq
+        self.dist = dist
+
+    def __call__(self, points: np.array) -> np.array:
+        return self.eq(points) + self.dist
+
+
+# Extrusion
+class Elongate(UnaryModifier):
+    def __init__(self, eq: Equation, a: np.array, b: np.array):
+        if not (a.shape == (3) and b.shape == (3)):
+            raise ValueError("a and b should be 3d vectors")
+        self.eq
+        self.a = a
+        self.b = b
+
+    @np.vectorize
+    def per_point(self, p: np.array) -> np.array:
+        pa = p - self.a
+        ba = self.b - self.a
+        h = u.clamp(np.dot(pa, ba) / np.dot(ba, ba), 0.0, 1.0)
+        return pa - ba*h
+
+    def __call__(self, points: np.array) -> np.array:
+        if not (len(points.shape) == 2 and points.shape[1] == 3):
+            raise ValueError("the given points should be an array of 3d vectors")
+        return self.eq(self.per_point(points))
+
+
+class Revolution(UnaryModifier):
+    def __init__(self, eq: Equation, r: float):
+        self.eq
         self.r = r
 
-    def __call__(self, p: np.array):
-        pa = p - self.a
-        ba = self.b - self.a;
-        h = clamp(np.dot(pa, ba) / np.dot(ba, ba), 0.0, 1.0)
-        return np.linalg.norm(pa - ba*h) - self.r
+    # def __call__(self, points: np.array) -> np.array:
+    #     q = np.array([np.linalg.norm(np.array([p[0], p[2]])) - self.r0, p[1]])
+    #     return np.linalg.norm(q) - self.r1
 
-
-# def pumpkin(p: np.array) -> float:
-#     ss = Sphere(0.5)
-#     diff = np.array([0.5, 0, 0])
-#     return smin(ss(p-diff), ss(p+diff), 0.1)
-#     # return min(ss(p-diff), ss(p+diff))

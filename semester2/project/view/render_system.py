@@ -6,7 +6,7 @@ from view.renderable import Renderable
 from view.renderable import Mesh
 
 
-class Engine:
+class RenderSystem:
     def __init__(self):
         # glfw.GLFW.glCreate
         if not glfw.init():
