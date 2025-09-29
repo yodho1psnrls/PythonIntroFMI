@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from model.mesh import Mesh
+from gen.mesh import Mesh
 
 
 # Abstract Factory class for Meshes

@@ -1,12 +1,38 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import numexpr as ne
-import gen.util as u
+import model.util as u
+
+
+# This gives a 3d vector with the derivatives of the sdf
+'''
+def gradient(p: np.array, eq, h=u.eps) -> np.array:
+    if p.shape[0] != 3:
+        raise RuntimeError("p should be a 3d vector")
+    e = u.AXIS * h
+    # Forward differentiation (Faster, and precise enough with small eps)
+    # p_val = eq(p)
+    # return glm.vec3(
+    #     eq(p+ex) - p_val,
+    #     eq(p+ey) - p_val,
+    #     eq(p+ez) - p_val,
+    # ) / h
+    # Central differentiation (More accurate, even with bigger eps values)
+    return np.array([
+        eq(p+e[0]) - eq(p-e[0]),
+        eq(p+e[1]) - eq(p-e[1]),
+        eq(p+e[2]) - eq(p-e[2]),
+    ]) / (2.0*h)
+'''
 
 
 def gradient(points: np.array, eq, h=u.eps) -> np.array:
     e = u.AXIS * h
-    # Central differentiation (More accurate, even with bigger eps values)
+    # return [[
+    #     eq(p+e[0]) - eq(p-e[0]),
+    #     eq(p+e[1]) - eq(p-e[1]),
+    #     eq(p+e[2]) - eq(p-e[2]),
+    # ] for p in points]
     return np.stack((
         eq(points+e[0]) - eq(points-e[0]),
         eq(points+e[1]) - eq(points-e[1]),

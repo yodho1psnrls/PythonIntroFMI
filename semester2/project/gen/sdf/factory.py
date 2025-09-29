@@ -1,12 +1,12 @@
 import numpy as np
-from model.sdf.iso_field import IsoField
-from model.util import AXIS
-from model.mesh_factory import MeshFactory
-from model.mesh import Mesh
-from model.point_cloud import vertex_dtype
-from model.sdf import gradient
-from model.util import lerp
-from model.util import timeit
+from gen.sdf.iso_field import IsoField
+from gen.util import AXIS
+from gen.mesh_factory import MeshFactory
+from gen.mesh import Mesh
+from gen.point_cloud import vertex_dtype
+from gen.sdf import gradient
+from gen.util import lerp
+from gen.util import timeit
 import time
 ONE = np.ones((3), dtype=np.int32)
 

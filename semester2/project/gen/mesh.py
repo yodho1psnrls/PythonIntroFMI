@@ -1,7 +1,7 @@
 import numpy as np
-from model.point_cloud import PointCloud
-from model.point_cloud import vertex_dtype
-from model.util import timeit
+from gen.point_cloud import PointCloud
+from gen.point_cloud import vertex_dtype
+from gen.util import timeit
 
 
 # len(list(polygon_diagonals(n))) == n*(n-3)/2

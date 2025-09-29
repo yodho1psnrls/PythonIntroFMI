@@ -1,7 +1,7 @@
 # from equations import *
-# from model.par.equations import *
-# from model.par.generator import *
+# from gen.par.equations import *
+# from gen.par.generator import *
 # from . import *
-from model.par.equations import *
-from model.par.factory import *
-from model.par.grid import *
+from gen.par.equations import *
+from gen.par.factory import *
+from gen.par.grid import *

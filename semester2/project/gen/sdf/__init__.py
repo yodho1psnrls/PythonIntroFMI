@@ -1,3 +1,3 @@
-from model.sdf.equations import *
-from model.sdf.factory import *
-from model.sdf.iso_field import *
+from gen.sdf.equations import *
+from gen.sdf.factory import *
+from gen.sdf.iso_field import *

@@ -1,6 +1,6 @@
 import numpy as np
 import numexpr as ne
-from model.util import timeit
+from gen.util import timeit
 
 
 class IsoField:

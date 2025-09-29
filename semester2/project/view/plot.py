@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from model.mesh import Mesh
-from model.point_cloud import PointCloud
+from gen.mesh import Mesh
+from gen.point_cloud import PointCloud
 
 
 class ViewSystem:
