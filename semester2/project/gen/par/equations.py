@@ -4,7 +4,7 @@ from math import sin
 from math import cos
 from math import exp
 from math import pi
-from model.util import eps
+from gen.util import eps
 import numexpr as ne
 
 

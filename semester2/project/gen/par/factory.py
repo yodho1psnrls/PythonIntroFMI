@@ -1,10 +1,10 @@
-from model.mesh_factory import MeshFactory
+from gen.mesh_factory import MeshFactory
 import numpy as np
 # import glm
-from model.mesh import Mesh
-# from model.vertex import Vertex
+from gen.mesh import Mesh
+# from gen.vertex import Vertex
 # import parametric as par
-from model import par
+from gen import par
 
 # TODO: Make the grid with 3d uvs that if different than 0
 # will be used with the gradient as bump map

@@ -1,7 +1,7 @@
 # import glm
 import numpy as np
-from model.mesh import Mesh
-# from model.vertex import Vertex
+from gen.mesh import Mesh
+# from gen.vertex import Vertex
 # from math import floor
 
 

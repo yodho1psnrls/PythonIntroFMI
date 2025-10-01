@@ -1,5 +1,5 @@
 import OpenGL.GL as GL
-from model.mesh import Mesh
+from gen.mesh import Mesh
 
 
 # A Mesh, but loaded into the GPU

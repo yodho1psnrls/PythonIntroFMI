@@ -1,9 +1,9 @@
 import glfw
 import OpenGL.GL as GL
 # import numpy as np
-from view.shader import Shader
-from view.renderable import Renderable
-from view.renderable import Mesh
+from render.shader import Shader
+from render.renderable import Renderable
+from render.renderable import Mesh
 
 
 class RenderSystem:
